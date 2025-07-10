@@ -1,0 +1,14 @@
+{
+	"id": "TagManager",
+	"name": "TagManager",
+	"display_name": "Tag Manager",
+	"author": ["SirMaiquis"],
+	"description": "Tag Manager is a mod to control tags in the game, you can manage the Ante when they can start appearing",
+	"prefix": "TagManager",
+	"main_file": "mod.lua",
+	"priority": 20,
+	"badge_colour": "0ff5bf",
+	"badge_text_colour": "000000",
+	"version": "1.0.0",
+	"dependencies": []
+}
