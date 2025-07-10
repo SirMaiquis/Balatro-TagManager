@@ -27,4 +27,4 @@ Do not abuse of the manager. 🤚👺
 
   
 
-![Update ](https://i.ibb.co/mC8mrvT2/Baldatro-Update.png)
+![Update ](https://iili.io/FE6yXdx.jpg)

@@ -24,3 +24,5 @@ Thank you for using or contributing to the Tag manager mod!
 Special thanks to the mod contributors:
 
 - [@SirMaiquis](https://github.com/SirMaiquis) - Main developer and maintainer of the mod.
+
+![Thumbnail](https://iili.io/FE6yXdx.jpg)
