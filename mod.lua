@@ -70,7 +70,6 @@ function G.UIDEF.settings_tab(tab)
   if tab == 'Tags' then
         local tag_tab = {}
         for k, v in pairs(G.P_TAGS) do
-          print(v)
           tag_tab[#tag_tab+1] = v
         end
 
@@ -81,8 +80,6 @@ function G.UIDEF.settings_tab(tab)
         local count = 0
         local matrixCount = 0;
         for tag, v in pairs(tag_tab) do
-            print(tag)
-            print(v)
             local min_ante = config[v.key];
             local temp_tag = Tag(v.key, true)
             local temp_tag_ui = temp_tag:generate_UI()

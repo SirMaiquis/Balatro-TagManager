@@ -1,9 +1,9 @@
 {
 	"id": "TagManager",
-	"name": "TagManager",
+	"name": "Tag Manager",
 	"display_name": "Tag Manager",
 	"author": ["SirMaiquis"],
-	"description": "Tag Manager is a mod to control tags in the game, you can manage the Ante when they can start appearing",
+	"description": "Tag Manager is a mod to control tags in the game, you can manage the Ante when they can start appearing.",
 	"prefix": "TagManager",
 	"main_file": "mod.lua",
 	"priority": 20,
