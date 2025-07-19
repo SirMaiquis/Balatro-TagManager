@@ -5,25 +5,49 @@ SMODS.current_mod.config_tab = function()
   return G.UIDEF.settings_tab('Tags');
 end
 
-local get_next_tag_keyRef = get_next_tag_key
-function get_next_tag_key(append)
-    local t = get_next_tag(append)
+local get_current_pool_ref = get_current_pool
+function get_current_pool(_type, _rarity, _legendary, _append)
+    if _type ~= 'Tag' then return get_current_pool_ref(_type, _rarity, _legendary, _append) end
 
-    return (t)
+    local _pool, _pool_key = get_current_pool_ref('Tag', nil, nil, _append)
+    local currentAnte = G.GAME.round_resets.ante
+    for k, v in pairs(_pool) do
+      local tagInConfig = get_tag_from_config(v)
+      if(tagInConfig == nil) then
+        _pool[k] = nil
+      else
+        if(tagInConfig >= currentAnte) then
+          _pool[k] = nil
+        end
+      end
+    end
+
+    for k, v in pairs(config) do
+      local tagInPool = get_tag_from_pool(_pool, k)
+      if(tagInPool ~= nil) then
+        break
+      end
+      if(v <= currentAnte) then
+        _pool[#_pool+1] = k
+      end
+    end
+
+
+    return _pool, _pool_key
+
 end
 
-function get_next_tag(append)
-    local t = get_next_tag_keyRef(append)
-    local resultIsInlist = false;
-    for k, v in pairs(config) do
-        if(t == k) then
-            if(v <= G.GAME.round_resets.ante) then
-                resultIsInlist = true
-            end
-        end
+function get_tag_from_config(key)
+  return config[key]
+end
+
+function get_tag_from_pool(pool, key)
+  for k, v in pairs(pool) do
+    if(v == key) then
+      return k
     end
-    if (resultIsInlist) then return t end
-    return get_next_tag(append)
+  end
+  return nil;
 end
 
 function create_UIBox_settings()
@@ -109,8 +133,7 @@ function G.UIDEF.settings_tab(tab)
                 count = 0
             end
         end
-
-        -- If there are leftover nodes (less than 3), insert them as the last row
+        
         if #rowNodes > 0 then
             table.insert(finalNodes, {n = G.UIT.R, nodes = rowNodes})
         end
@@ -127,6 +150,5 @@ function G.UIDEF.settings_tab(tab)
 end
 
 G.FUNCS.change_tag_min_ante = function(args)
-
   config[args.cycle_config.identifier] = args.to_val
 end

@@ -11,6 +11,10 @@ Tag Manager is a mod to control tags in the game, you can manage the Ante when t
 
 ## Updates:
 
+**Update 1.1**: Algorithm improvements and bug fixes.
+
+- 🚀 **Performance**: Improved algorithm for faster tag processing
+- 🐛 **Bug Fix**: Fixed issues when using tags that normally should appear in later antes
 
 **Update 1.0**: Initial release.
 
