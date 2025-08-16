@@ -47,24 +47,31 @@ function get_current_pool(pool_type, rarity, legendary, append)
     local tag_pool, pool_key = original_get_current_pool('Tag', nil, nil, append)
     local current_ante = G.GAME.round_resets.ante
     
-    -- Remove tags from pool that haven't reached their minimum ante requirement
+    -- Remove tags from pool that don't meet ante requirements
     for pool_index, tag_key in pairs(tag_pool) do
-        local min_ante_required = get_tag_min_ante(tag_key)
+        local tag_ante_config = get_tag_ante_config(tag_key)
         
-        if min_ante_required == nil then
+        if tag_ante_config == nil then
             -- Tag not found in config, remove it
             tag_pool[pool_index] = nil
-        elseif min_ante_required > current_ante then
-            -- Tag requires higher ante, remove it
-            tag_pool[pool_index] = nil
+        else
+            local min_ante = tag_ante_config.min_ante or 1
+            local max_ante = tag_ante_config.max_ante or 8
+            
+            if current_ante < min_ante or current_ante > max_ante then
+                -- Tag is outside allowed ante range, remove it
+                tag_pool[pool_index] = nil
+            end
         end
     end
 
     -- Add tags that are now available but not yet in the pool
-    for tag_key, min_ante_required in pairs(tag_config) do
+    for tag_key, tag_ante_config in pairs(tag_config) do
         local is_tag_in_pool = is_tag_in_current_pool(tag_pool, tag_key)
+        local min_ante = tag_ante_config.min_ante or 1
+        local max_ante = tag_ante_config.max_ante or 8
         
-        if not is_tag_in_pool and min_ante_required <= current_ante then
+        if not is_tag_in_pool and current_ante >= min_ante and current_ante <= max_ante then
             tag_pool[#tag_pool + 1] = tag_key
         end
     end
@@ -76,9 +83,21 @@ end
 -- UTILITY FUNCTIONS
 -- ============================================================================
 
--- Get the minimum ante requirement for a specific tag
-function get_tag_min_ante(tag_key)
+-- Get the ante configuration for a specific tag
+function get_tag_ante_config(tag_key)
     return tag_config[tag_key]
+end
+
+-- Get the minimum ante requirement for a specific tag (legacy compatibility)
+function get_tag_min_ante(tag_key)
+    local config = tag_config[tag_key]
+    return config and config.min_ante or nil
+end
+
+-- Get the maximum ante requirement for a specific tag
+function get_tag_max_ante(tag_key)
+    local config = tag_config[tag_key]
+    return config and config.max_ante or 8
 end
 
 -- Check if a tag is already present in the current pool
@@ -106,9 +125,9 @@ function create_tags_settings_tab()
         return tag_a.order < tag_b.order 
     end)
     
-    -- Pagination settings: 4 rows × 3 tags = 12 tags per page
+    -- Pagination settings: 2 rows × 3 tags = 6 tags per page
     local tags_per_row = 3
-    local rows_per_page = 4
+    local rows_per_page = 2
     local tags_per_page = tags_per_row * rows_per_page
     local total_pages = math.ceil(#available_tags / tags_per_page)
     
@@ -193,34 +212,64 @@ function create_tags_settings_tab()
     }
 end
 
--- Create a single tag option node (tag visual + ante selector)
+-- Create a single tag option node (tag visual + min/max ante selectors)
 function create_tag_option_node(tag_data)
     local min_ante_required = tag_config[tag_data.key].min_ante
+    local max_ante_required = tag_config[tag_data.key].max_ante or 8 -- Default to 8 if not set
     
     -- Create temporary tag for UI display
     local temp_tag = Tag(tag_data.key, true)
     local tag_ui = temp_tag:generate_UI()
     
-    -- Create the ante requirement selector (1-8)
-    local ante_selector = create_option_cycle({
+    -- Create the minimum ante requirement selector (1-8)
+    local min_ante_selector = create_option_cycle({
         w = 1,
-        scale = 0.6,
-        label = localize{type = 'name_text', key = tag_data.key, set = 'Tag'},
+        scale = 0.55,
+        label = "Min",
         options = {1, 2, 3, 4, 5, 6, 7, 8},
         opt_callback = 'change_tag_min_ante',
         current_option = min_ante_required,
         identifier = tag_data.key,
         colour = {0.4, 0.5, 0.45, 1} -- Neutral grey-green to match theme
     })
-    ante_selector.n = G.UIT.C
+    min_ante_selector.n = G.UIT.C
+    
+    -- Create the maximum ante requirement selector (1-8)
+    local max_ante_selector = create_option_cycle({
+        w = 1,
+        scale = 0.55,
+        label = "Max",
+        options = {1, 2, 3, 4, 5, 6, 7, 8},
+        opt_callback = 'change_tag_max_ante',
+        current_option = max_ante_required,
+        identifier = tag_data.key,
+        colour = {0.5, 0.4, 0.45, 1} -- Slightly different shade for distinction
+    })
+    max_ante_selector.n = G.UIT.C
     
     return {
         n = G.UIT.C, 
+        config = {align = "cm", padding = 0.1},
         nodes = {
+            -- Tag visual at the top
             {
-                n = G.UIT.C, 
-                config = {align = "cm", padding = 0.1}, 
-                nodes = {tag_ui, ante_selector}
+                n = G.UIT.R,
+                config = {align = "cm", padding = 0.05},
+                nodes = {tag_ui}
+            },
+            -- Tag name below the visual
+            {
+                n = G.UIT.R,
+                config = {align = "cm", padding = 0.02},
+                nodes = {
+                    {n = G.UIT.T, config = {text = localize{type = 'name_text', key = tag_data.key, set = 'Tag'}, scale = 0.4, colour = G.C.UI.TEXT_LIGHT}}
+                }
+            },
+            -- Min and Max selectors in a row at the bottom
+            {
+                n = G.UIT.R,
+                config = {align = "cm", padding = 0.02},
+                nodes = {min_ante_selector, max_ante_selector}
             }
         }
     }
@@ -233,6 +282,11 @@ end
 -- Callback function for when a tag's minimum ante requirement is changed
 G.FUNCS.change_tag_min_ante = function(args)
     tag_config[args.cycle_config.identifier].min_ante = args.to_val
+end
+
+-- Callback function for when a tag's maximum ante requirement is changed
+G.FUNCS.change_tag_max_ante = function(args)
+    tag_config[args.cycle_config.identifier].max_ante = args.to_val
 end
 
 -- Callback function for when the tags page is changed
