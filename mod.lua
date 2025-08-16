@@ -14,6 +14,21 @@ SMODS.current_mod.config_tab = function()
     return create_tags_settings_tab()
 end
 
+SMODS.current_mod.ui_config = {
+  colour = G.C.L_BLACK, -- Main UI box
+  bg_colour = {G.C.GREY[1], G.C.GREY[2], G.C.GREY[3], 0.7}, -- Background
+  back_colour = G.C.ORANGE, -- Back button
+  tab_button_colour = G.C.BOOSTER, -- Tabs buttons
+  outline_colour = G.C.JOKER_GREY, -- Main UI box outline
+  author_colour = G.C.BLUE, -- Author text
+  author_bg_colour = G.C.CLEAR, -- Author box background
+  author_outline_colour = G.C.JOKER_GREY, -- Author box outline
+  collection_bg_colour = {G.C.GREY[1], G.C.GREY[2], G.C.GREY[3], 0.7}, -- Collection background (Defaults to bg_colour)
+  collection_back_colour = G.C.ORANGE, -- Collection background (Defaults to back_colour)
+  collection_outline_colour = G.C.JOKER_GREY, -- Collection background (Defaults to outline_colour)
+  collection_option_cycle_colour = G.C.RED, -- Collection option cycle button
+}
+
 -- ============================================================================
 -- TAG POOL MANAGEMENT
 -- ============================================================================
@@ -109,15 +124,13 @@ function create_tags_settings_tab()
     local end_index = math.min(start_index + tags_per_page - 1, #available_tags)
     
     -- Create the main container with header message
-    local ui_nodes1 = {
-        simple_text_container('ml_tags_options_message', {
+    local ui_nodes = {
+      custom_text_container('ml_tags_options_message', {
             colour = G.C.UI.TEXT_LIGHT, 
             scale = 0.55, 
             shadow = true
         })
     }
-
-    local ui_nodes = {n=args.col and G.UIT.C or G.UIT.R, config = {align = "cm", padding= args.padding or 0.03}, nodes=container}
     
     -- Create tag option rows for current page only
     local current_row_nodes = {}
@@ -235,4 +248,17 @@ G.FUNCS.change_tags_page = function(args)
     
     -- Rebuild the Tags tab content similar to how jokers collection works
     G.FUNCS.overlay_menu({definition = create_tags_settings_tab(), config = {align="cm", offset = {x=0,y=0}, major = G.ROOM_ATTACH, bond = 'Weak'}})
+end
+
+function custom_text_container(_loc, args)
+  if not _loc then return nil end
+  args = args or {}
+  local text = {}
+  localize{type = 'quips', key = _loc or 'lq_1', vars = loc_vars or {}, nodes = text}
+  local row = {}
+  for k, v in ipairs(text) do
+    row[#row+1] =  {n=G.UIT.R, config={align = "cl", shadow = true}, nodes=v}
+  end
+  local t = {n=G.UIT.R, config={align = "cm", minh = 1,r = 0.2, padding = 0.03, minw = 1, colour = G.C.WHITE}, nodes=row}
+  return t
 end
