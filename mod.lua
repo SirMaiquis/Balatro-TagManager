@@ -4,6 +4,12 @@
 
 -- Get the mod configuration containing tag minimum ante requirements
 local tag_config = SMODS.current_mod.config
+
+-- Global toggle for TagManager functionality
+if tag_config.global_enabled == nil then
+    tag_config.global_enabled = true
+end
+
 sendDebugMessage("Launching Tag Manager!")
 
 -- Global variable to track current page in tags settings
@@ -42,12 +48,17 @@ function get_current_pool(pool_type, rarity, legendary, append)
     if pool_type ~= 'Tag' then 
         return original_get_current_pool(pool_type, rarity, legendary, append) 
     end
+    
+    -- If TagManager is disabled, use original function
+    if not tag_config.global_enabled then
+        return original_get_current_pool(pool_type, rarity, legendary, append)
+    end
 
     -- Get the base tag pool from the original function
     local tag_pool, pool_key = original_get_current_pool('Tag', nil, nil, append)
     local current_ante = G.GAME.round_resets.ante
     
-    -- Remove tags from pool that don't meet ante requirements
+    -- Remove tags from pool that don't meet ante requirements or are disabled
     for pool_index, tag_key in pairs(tag_pool) do
         local tag_ante_config = get_tag_ante_config(tag_key)
         
@@ -57,9 +68,14 @@ function get_current_pool(pool_type, rarity, legendary, append)
         else
             local min_ante = tag_ante_config.min_ante or 1
             local max_ante = tag_ante_config.max_ante or 8
+            local enabled = tag_ante_config.enabled
             
-            if current_ante < min_ante or current_ante > max_ante then
-                -- Tag is outside allowed ante range, remove it
+            -- Handle edge cases for ante ranges
+            local min_check = (min_ante == 1) and true or (current_ante >= min_ante)
+            local max_check = (max_ante == 8) and true or (current_ante <= max_ante)
+            
+            if enabled == false or not (min_check and max_check) then
+                -- Tag is disabled or outside allowed ante range, remove it
                 tag_pool[pool_index] = nil
             end
         end
@@ -67,12 +83,20 @@ function get_current_pool(pool_type, rarity, legendary, append)
 
     -- Add tags that are now available but not yet in the pool
     for tag_key, tag_ante_config in pairs(tag_config) do
-        local is_tag_in_pool = is_tag_in_current_pool(tag_pool, tag_key)
-        local min_ante = tag_ante_config.min_ante or 1
-        local max_ante = tag_ante_config.max_ante or 8
-        
-        if not is_tag_in_pool and current_ante >= min_ante and current_ante <= max_ante then
-            tag_pool[#tag_pool + 1] = tag_key
+        -- Skip non-tag config entries like global_enabled
+        if type(tag_ante_config) == "table" and tag_ante_config.min_ante then
+            local is_tag_in_pool = is_tag_in_current_pool(tag_pool, tag_key)
+            local min_ante = tag_ante_config.min_ante or 1
+            local max_ante = tag_ante_config.max_ante or 8
+            local enabled = tag_ante_config.enabled ~= false -- Default to true if not specified
+            
+            -- Handle edge cases for ante ranges
+            local min_check = (min_ante == 1) and true or (current_ante >= min_ante)
+            local max_check = (max_ante == 8) and true or (current_ante <= max_ante)
+            
+            if not is_tag_in_pool and enabled and min_check and max_check then
+                tag_pool[#tag_pool + 1] = tag_key
+            end
         end
     end
 
@@ -148,7 +172,19 @@ function create_tags_settings_tab()
             colour = G.C.UI.TEXT_LIGHT, 
             scale = 0.80, 
             shadow = true
-        })
+        }),
+        -- Global enable/disable toggle
+        {
+            n = G.UIT.R,
+            config = {align = "cm", padding = 0.1},
+            nodes = {
+                create_toggle({
+                    label = "Enable Tag Manager", 
+                    ref_table = tag_config, 
+                    ref_value = 'global_enabled'
+                })
+            }
+        }
     }
     
     -- Create tag option rows for current page only
@@ -214,8 +250,15 @@ end
 
 -- Create a single tag option node (tag visual + min/max ante selectors)
 function create_tag_option_node(tag_data)
-    local min_ante_required = tag_config[tag_data.key].min_ante
-    local max_ante_required = tag_config[tag_data.key].max_ante or 8 -- Default to 8 if not set
+    local tag_ante_config = tag_config[tag_data.key] or {}
+    local min_ante_required = tag_ante_config.min_ante or 1
+    local max_ante_required = tag_ante_config.max_ante or 8
+    
+    -- Ensure enabled field exists
+    if tag_ante_config.enabled == nil then
+        tag_ante_config.enabled = true
+        tag_config[tag_data.key] = tag_ante_config
+    end
     
     -- Create temporary tag for UI display
     local temp_tag = Tag(tag_data.key, true)
@@ -247,6 +290,23 @@ function create_tag_option_node(tag_data)
     })
     max_ante_selector.n = G.UIT.C
     
+    local tag_name = localize{type = 'name_text', key = tag_data.key, set = 'Tag'}
+    if #tag_name < 12 then
+        local padding = math.floor((12 - #tag_name) / 2)
+        tag_name = string.rep(" ", padding) .. tag_name .. string.rep(" ", padding)
+        if #tag_name < 12 then -- Handle odd lengths
+            tag_name = tag_name .. " "
+        end
+    end
+    -- Create enabled toggle for this tag
+    local enabled_toggle = create_toggle({
+        label = tag_name, 
+        ref_table = tag_config[tag_data.key], 
+        ref_value = 'enabled',
+        scale = 0.6,
+        align = "cm"
+    })
+    
     return {
         n = G.UIT.C, 
         config = {align = "cm", padding = 0.1},
@@ -260,9 +320,9 @@ function create_tag_option_node(tag_data)
             -- Tag name below the visual
             {
                 n = G.UIT.R,
-                config = {align = "cm", padding = 0.02},
+                config = {align = "cm", padding = 0.02, minw = 1},
                 nodes = {
-                    {n = G.UIT.T, config = {text = localize{type = 'name_text', key = tag_data.key, set = 'Tag'}, scale = 0.4, colour = G.C.UI.TEXT_LIGHT}}
+                  enabled_toggle
                 }
             },
             -- Min and Max selectors in a row at the bottom
