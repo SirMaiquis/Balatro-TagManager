@@ -15,18 +15,18 @@ SMODS.current_mod.config_tab = function()
 end
 
 SMODS.current_mod.ui_config = {
-  colour = G.C.L_BLACK, -- Main UI box
+  colour = {0.15, 0.35, 0.4, 1}, -- Soft teal-grey main UI box
   bg_colour = {G.C.GREY[1], G.C.GREY[2], G.C.GREY[3], 0.7}, -- Background
-  back_colour = G.C.ORANGE, -- Back button
-  tab_button_colour = G.C.BOOSTER, -- Tabs buttons
-  outline_colour = G.C.JOKER_GREY, -- Main UI box outline
-  author_colour = G.C.BLUE, -- Author text
-  author_bg_colour = G.C.CLEAR, -- Author box background
-  author_outline_colour = G.C.JOKER_GREY, -- Author box outline
-  collection_bg_colour = {G.C.GREY[1], G.C.GREY[2], G.C.GREY[3], 0.7}, -- Collection background (Defaults to bg_colour)
-  collection_back_colour = G.C.ORANGE, -- Collection background (Defaults to back_colour)
-  collection_outline_colour = G.C.JOKER_GREY, -- Collection background (Defaults to outline_colour)
-  collection_option_cycle_colour = G.C.RED, -- Collection option cycle button
+  back_colour = {0.7, 0.45, 0.25, 1}, -- Muted warm brown back button
+  tab_button_colour = {0.25, 0.55, 0.5, 1}, -- Subdued teal tab buttons
+  outline_colour = {0.6, 0.65, 0.4, 1}, -- Soft sage green outline
+  author_colour = {0.95, 0.95, 0.95, 1}, -- Clean white author text
+  author_bg_colour = {0.2, 0.4, 0.35, 0.85}, -- Muted teal author background
+  author_outline_colour = {0.6, 0.65, 0.4, 1}, -- Matching sage outline
+  collection_bg_colour = {0.18, 0.38, 0.38, 0.8}, -- Subtle teal collection background
+  collection_back_colour = {0.65, 0.4, 0.22, 1}, -- Warm earth tone collection back
+  collection_outline_colour = {0.55, 0.6, 0.35, 1}, -- Soft sage collection outline
+  collection_option_cycle_colour = {0.4, 0.5, 0.45, 1}, -- Neutral grey-green cycle button
 }
 
 -- ============================================================================
@@ -127,7 +127,7 @@ function create_tags_settings_tab()
     local ui_nodes = {
       custom_text_container('ml_tags_options_message', {
             colour = G.C.UI.TEXT_LIGHT, 
-            scale = 0.55, 
+            scale = 0.80, 
             shadow = true
         })
     }
@@ -176,7 +176,7 @@ function create_tags_settings_tab()
                     cycle_shoulders = true,
                     opt_callback = 'change_tags_page',
                     current_option = current_tags_page,
-                    colour = G.C.RED,
+                    colour = {0.4, 0.5, 0.45, 1}, -- Neutral grey-green pagination
                     no_pips = true,
                     focus_args = {snap_to = true, nav = 'wide'}
                 })
@@ -195,7 +195,7 @@ end
 
 -- Create a single tag option node (tag visual + ante selector)
 function create_tag_option_node(tag_data)
-    local min_ante_required = tag_config[tag_data.key]
+    local min_ante_required = tag_config[tag_data.key].min_ante
     
     -- Create temporary tag for UI display
     local temp_tag = Tag(tag_data.key, true)
@@ -209,7 +209,8 @@ function create_tag_option_node(tag_data)
         options = {1, 2, 3, 4, 5, 6, 7, 8},
         opt_callback = 'change_tag_min_ante',
         current_option = min_ante_required,
-        identifier = tag_data.key
+        identifier = tag_data.key,
+        colour = {0.4, 0.5, 0.45, 1} -- Neutral grey-green to match theme
     })
     ante_selector.n = G.UIT.C
     
@@ -231,7 +232,7 @@ end
 
 -- Callback function for when a tag's minimum ante requirement is changed
 G.FUNCS.change_tag_min_ante = function(args)
-    tag_config[args.cycle_config.identifier] = args.to_val
+    tag_config[args.cycle_config.identifier].min_ante = args.to_val
 end
 
 -- Callback function for when the tags page is changed
