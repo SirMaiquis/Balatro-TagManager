@@ -8,7 +8,7 @@ sendDebugMessage("Launching Tag Manager!")
 
 -- Register the Tags settings tab in the mod configuration
 SMODS.current_mod.config_tab = function() 
-    return G.UIDEF.settings_tab('Tags')
+    return create_tags_settings_tab()
 end
 
 -- ============================================================================
@@ -74,82 +74,8 @@ function is_tag_in_current_pool(pool, tag_key)
 end
 
 -- ============================================================================
--- SETTINGS UI CREATION
--- ============================================================================
-
--- Create the main settings UI box with all tabs including the new Tags tab
-function create_UIBox_settings()
-    local settings_tabs = {}
-    
-    -- Game settings tab (default selected)
-    settings_tabs[#settings_tabs + 1] = {
-        label = localize('b_set_game'),
-        chosen = true,
-        tab_definition_function = G.UIDEF.settings_tab,
-        tab_definition_function_args = 'Game'
-    }
-    
-    -- Video settings tab (if available)
-    if G.F_VIDEO_SETTINGS then   
-        settings_tabs[#settings_tabs + 1] = {
-            label = localize('b_set_video'),
-            tab_definition_function = G.UIDEF.settings_tab,
-            tab_definition_function_args = 'Video'
-        }
-    end
-    
-    -- Graphics settings tab
-    settings_tabs[#settings_tabs + 1] = {
-        label = localize('b_set_graphics'),
-        tab_definition_function = G.UIDEF.settings_tab,
-        tab_definition_function_args = 'Graphics'
-    }
-    
-    -- Audio settings tab
-    settings_tabs[#settings_tabs + 1] = {
-        label = localize('b_set_audio'),
-        tab_definition_function = G.UIDEF.settings_tab,
-        tab_definition_function_args = 'Audio'
-    }
-    
-    -- Tags settings tab (our custom tab)
-    settings_tabs[#settings_tabs + 1] = {
-        label = localize('b_tags'),
-        tab_definition_function = G.UIDEF.settings_tab,
-        tab_definition_function_args = 'Tags'
-    }
-
-    local settings_ui = create_UIBox_generic_options({
-        back_func = 'options',
-        contents = {
-            create_tabs({
-                tabs = settings_tabs,
-                tab_h = 7.05,
-                tab_alignment = 'tm',
-                snap_to_nav = true
-            })
-        }
-    })
-    
-    return settings_ui
-end
-
--- ============================================================================
 -- TAGS SETTINGS TAB UI
 -- ============================================================================
-
--- Store reference to the original settings_tab function
-local original_settings_tab = G.UIDEF.settings_tab
-
--- Override the settings_tab function to handle our custom Tags tab
-function G.UIDEF.settings_tab(tab)
-    if tab == 'Tags' then
-        return create_tags_settings_tab()
-    end
-    
-    -- For all other tabs, use the original function
-    return original_settings_tab(tab)
-end
 
 -- Create the Tags settings tab UI
 function create_tags_settings_tab()
