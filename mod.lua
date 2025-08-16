@@ -6,6 +6,9 @@
 local tag_config = SMODS.current_mod.config
 sendDebugMessage("Launching Tag Manager!")
 
+-- Global variable to track current page in tags settings
+local current_tags_page = 1
+
 -- Register the Tags settings tab in the mod configuration
 SMODS.current_mod.config_tab = function() 
     return create_tags_settings_tab()
@@ -77,7 +80,7 @@ end
 -- TAGS SETTINGS TAB UI
 -- ============================================================================
 
--- Create the Tags settings tab UI
+-- Create the Tags settings tab UI with pagination
 function create_tags_settings_tab()
     -- Get all available tags and sort them by display order
     local available_tags = {}
@@ -88,36 +91,86 @@ function create_tags_settings_tab()
         return tag_a.order < tag_b.order 
     end)
     
+    -- Pagination settings: 4 rows × 3 tags = 12 tags per page
+    local tags_per_row = 3
+    local rows_per_page = 4
+    local tags_per_page = tags_per_row * rows_per_page
+    local total_pages = math.ceil(#available_tags / tags_per_page)
+    
+    -- Ensure current page is within valid range
+    if current_tags_page > total_pages then
+        current_tags_page = total_pages
+    elseif current_tags_page < 1 then
+        current_tags_page = 1
+    end
+    
+    -- Calculate which tags to show on current page
+    local start_index = (current_tags_page - 1) * tags_per_page + 1
+    local end_index = math.min(start_index + tags_per_page - 1, #available_tags)
+    
     -- Create the main container with header message
-    local ui_nodes = {
+    local ui_nodes1 = {
         simple_text_container('ml_tags_options_message', {
             colour = G.C.UI.TEXT_LIGHT, 
             scale = 0.55, 
             shadow = true
         })
     }
+
+    local ui_nodes = {n=args.col and G.UIT.C or G.UIT.R, config = {align = "cm", padding= args.padding or 0.03}, nodes=container}
     
-    -- Create tag option rows (6 tags per row)
+    -- Create tag option rows for current page only
     local current_row_nodes = {}
     local tags_in_current_row = 0
-    local max_tags_per_row = 6
+    local current_tag_index = 0
     
-    for _, tag_data in pairs(available_tags) do
-        local tag_option_node = create_tag_option_node(tag_data)
-        table.insert(current_row_nodes, tag_option_node)
-        tags_in_current_row = tags_in_current_row + 1
-        
-        -- When row is full, add it to main nodes and start a new row
-        if tags_in_current_row == max_tags_per_row then
-            table.insert(ui_nodes, {n = G.UIT.R, nodes = current_row_nodes})
-            current_row_nodes = {}
-            tags_in_current_row = 0
+    for i = start_index, end_index do
+        local tag_data = available_tags[i]
+        if tag_data then
+            local tag_option_node = create_tag_option_node(tag_data)
+            table.insert(current_row_nodes, tag_option_node)
+            tags_in_current_row = tags_in_current_row + 1
+            current_tag_index = current_tag_index + 1
+            
+            -- When row is full, add it to main nodes and start a new row
+            if tags_in_current_row == tags_per_row then
+                table.insert(ui_nodes, {n = G.UIT.R, nodes = current_row_nodes})
+                current_row_nodes = {}
+                tags_in_current_row = 0
+            end
         end
     end
     
     -- Add any remaining tags in the last row
     if #current_row_nodes > 0 then
         table.insert(ui_nodes, {n = G.UIT.R, nodes = current_row_nodes})
+    end
+    
+    -- Create pagination controls if there are multiple pages
+    if total_pages > 1 then
+        local page_options = {}
+        for i = 1, total_pages do
+            table.insert(page_options, localize('k_page') .. ' ' .. tostring(i) .. '/' .. tostring(total_pages))
+        end
+        
+        local pagination_control = {
+            n = G.UIT.R, 
+            config = {align = "cm"}, 
+            nodes = {
+                create_option_cycle({
+                    options = page_options,
+                    w = 4.5,
+                    cycle_shoulders = true,
+                    opt_callback = 'change_tags_page',
+                    current_option = current_tags_page,
+                    colour = G.C.RED,
+                    no_pips = true,
+                    focus_args = {snap_to = true, nav = 'wide'}
+                })
+            }
+        }
+        
+        table.insert(ui_nodes, pagination_control)
     end
     
     return {
@@ -166,4 +219,20 @@ end
 -- Callback function for when a tag's minimum ante requirement is changed
 G.FUNCS.change_tag_min_ante = function(args)
     tag_config[args.cycle_config.identifier] = args.to_val
+end
+
+-- Callback function for when the tags page is changed
+G.FUNCS.change_tags_page = function(args)
+    -- Extract the page number from the string "Page X/Y" -> X
+    local page_string = args.to_val
+    local page_number = tonumber(page_string:match("(%d+)"))
+    
+    if page_number then
+        current_tags_page = page_number
+    else
+        current_tags_page = 1  -- Fallback to page 1 if parsing fails
+    end
+    
+    -- Rebuild the Tags tab content similar to how jokers collection works
+    G.FUNCS.overlay_menu({definition = create_tags_settings_tab(), config = {align="cm", offset = {x=0,y=0}, major = G.ROOM_ATTACH, bond = 'Weak'}})
 end
