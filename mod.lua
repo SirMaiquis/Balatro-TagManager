@@ -15,6 +15,10 @@ sendDebugMessage("Launching Tag Manager!")
 -- Global variable to track current page in tags settings
 local current_tags_page = 1
 
+-- Global reference to the tab content UIBox and its parent for updates
+local tags_tab_content_box = nil
+local tags_tab_parent_node = nil
+
 -- Register the Tags settings tab in the mod configuration
 SMODS.current_mod.config_tab = function() 
     return create_tags_settings_tab()
@@ -140,6 +144,26 @@ end
 
 -- Create the Tags settings tab UI with pagination
 function create_tags_settings_tab()
+    -- Create the tab content UIBox that can be updated independently
+    tags_tab_content_box = UIBox({
+        definition = create_tags_content_definition(),
+        config = {offset = {x=0,y=0}, type = 'cm'}
+    })
+    
+    -- Store reference to the parent node that contains our UIBox
+    tags_tab_parent_node = {n = G.UIT.O, config = {object = tags_tab_content_box}}
+    
+    return {
+        n = G.UIT.ROOT,
+        config = {align = "cm", padding = 0.05, colour = G.C.CLEAR},
+        nodes = {
+            tags_tab_parent_node
+        }
+    }
+end
+
+-- Create the content definition for the tags tab (separate function for easy updating)
+function create_tags_content_definition()
     -- Get all available tags and sort them by display order
     local available_tags = {}
     for tag_key, tag_data in pairs(G.P_TAGS) do
@@ -214,30 +238,9 @@ function create_tags_settings_tab()
         table.insert(ui_nodes, {n = G.UIT.R, nodes = current_row_nodes})
     end
     
-    -- Create pagination controls if there are multiple pages
-    if total_pages > 1 then
-        local page_options = {}
-        for i = 1, total_pages do
-            table.insert(page_options, localize('k_page') .. ' ' .. tostring(i) .. '/' .. tostring(total_pages))
-        end
-        
-        local pagination_control = {
-            n = G.UIT.R, 
-            config = {align = "cm"}, 
-            nodes = {
-                create_option_cycle({
-                    options = page_options,
-                    w = 4.5,
-                    cycle_shoulders = true,
-                    opt_callback = 'change_tags_page',
-                    current_option = current_tags_page,
-                    colour = {0.4, 0.5, 0.45, 1}, -- Neutral grey-green pagination
-                    no_pips = true,
-                    focus_args = {snap_to = true, nav = 'wide'}
-                })
-            }
-        }
-        
+    -- Add pagination controls if there are multiple pages
+    local pagination_control = create_pagination_control(total_pages, current_tags_page)
+    if pagination_control then
         table.insert(ui_nodes, pagination_control)
     end
     
@@ -245,6 +248,35 @@ function create_tags_settings_tab()
         n = G.UIT.ROOT,
         config = {align = "cm", padding = 0.05, colour = G.C.CLEAR},
         nodes = ui_nodes
+    }
+end
+
+-- Create pagination controls for the tags settings tab
+function create_pagination_control(total_pages, current_page)
+    if total_pages <= 1 then
+        return nil
+    end
+    
+    local page_options = {}
+    for i = 1, total_pages do
+        table.insert(page_options, localize('k_page') .. ' ' .. tostring(i) .. '/' .. tostring(total_pages))
+    end
+    
+    return {
+        n = G.UIT.R, 
+        config = {align = "cm"}, 
+        nodes = {
+            create_option_cycle({
+                options = page_options,
+                w = 4.5,
+                cycle_shoulders = true,
+                opt_callback = 'change_tags_page',
+                current_option = current_page,
+                colour = {0.4, 0.5, 0.45, 1}, -- Neutral grey-green pagination
+                no_pips = true,
+                focus_args = {snap_to = true, nav = 'wide'}
+            })
+        }
     }
 end
 
@@ -294,7 +326,7 @@ function create_tag_option_node(tag_data)
     if #tag_name < 12 then
         local padding = math.floor((12 - #tag_name) / 2)
         tag_name = string.rep(" ", padding) .. tag_name .. string.rep(" ", padding)
-        if #tag_name < 12 then -- Handle odd lengths
+        if #tag_name < 12 then
             tag_name = tag_name .. " "
         end
     end
@@ -361,8 +393,27 @@ G.FUNCS.change_tags_page = function(args)
         current_tags_page = 1  -- Fallback to page 1 if parsing fails
     end
     
-    -- Rebuild the Tags tab content similar to how jokers collection works
-    G.FUNCS.overlay_menu({definition = create_tags_settings_tab(), config = {align="cm", offset = {x=0,y=0}, major = G.ROOM_ATTACH, bond = 'Weak'}})
+    -- Update only the tab content UIBox, preserving the parent UI
+    -- Following the pattern from UI-GUIDE.MD lines 274-290
+    if tags_tab_content_box and tags_tab_parent_node then
+        -- Get the parent of the UIBox
+        local menu_wrap = tags_tab_content_box.parent
+        
+        -- Remove the current UIBox
+        menu_wrap.config.object:remove()
+        
+        -- Create new UIBox with proper parent reference
+        menu_wrap.config.object = UIBox({
+            definition = create_tags_content_definition(),
+            config = {parent = menu_wrap, type = 'cm'}
+        })
+        
+        -- Update our global reference
+        tags_tab_content_box = menu_wrap.config.object
+        
+        -- Recalculate the UI to show changes
+        menu_wrap.UIBox:recalculate()
+    end
 end
 
 function custom_text_container(_loc, args)
