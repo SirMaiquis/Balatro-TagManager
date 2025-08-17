@@ -23,6 +23,10 @@ SMODS.current_mod.config_tab = function()
     return TagManagerUI.create_tags_settings_tab()
 end
 
+SMODS.current_mod.extra_tabs = function()
+   return TagManagerUI.create_credits_tab()
+end
+
 -- UI configuration
 SMODS.current_mod.ui_config = {
     colour = {0.15, 0.35, 0.4, 1},

@@ -55,7 +55,7 @@ function TagManagerUI.create_tags_content_definition()
     local end_index = math.min(start_index + tags_per_page - 1, #available_tags)
     
     local ui_nodes = {
-        TagManagerUtils.custom_text_container('ml_tags_options_message', {
+        TagManagerUtils.custom_text_container('tm_tags_options_message', {
             colour = G.C.UI.TEXT_LIGHT, 
             scale = 0.80, 
             shadow = true
@@ -243,6 +243,154 @@ function TagManagerUI.change_tags_page(args)
         tags_tab_content_box = menu_wrap.config.object
         menu_wrap.UIBox:recalculate()
     end
+end
+
+function TagManagerUI.create_credits_tab()
+    local scale = 0.75
+    return {
+      label = localize("b_credits"),
+      tab_definition_function = function()
+        return {
+          n = G.UIT.ROOT,
+          config = {
+            align = "cm",
+            padding = 0.05,
+            colour = G.C.CLEAR,
+          },
+          nodes = {
+            {
+              n = G.UIT.R,
+              config = {
+                padding = 0,
+                align = "cm"
+              },
+              nodes = {
+                {
+                  n = G.UIT.T,
+                  config = {
+                    text = localize("tm_credits_thanks"),
+                    shadow = true,
+                    scale = scale * 0.8,
+                    colour = G.C.UI.TEXT_LIGHT
+                  }
+                }
+              }
+            },
+            {
+              n = G.UIT.R,
+              config = {
+                padding = 0,
+                align = "cm"
+              },
+              nodes = {
+                {
+                  n = G.UIT.T,
+                  config = {
+                    text = localize("tm_credits_lead"),
+                    shadow = true,
+                    scale = scale * 0.8,
+                    colour = G.C.UI.TEXT_LIGHT
+                  }
+                },
+                {
+                  n = G.UIT.T,
+                  config = {
+                    text = " @SirMaiquis",
+                    shadow = true,
+                    scale = scale * 0.8,
+                    colour = G.C.GREEN,
+                    bump = true,
+                    spacing = 1
+                  }
+                }
+              }
+            },
+            {
+              n = G.UIT.R,
+              config = {
+                padding = 0.2,
+                align = "cm",
+              },
+              nodes = {
+                UIBox_button({
+                  minw = 3.85,
+                  button = "tm_github",
+                  label = {"Github"},
+                  colour = {0.4, 0.5, 0.45, 1},
+                }),
+                {
+                    n = G.UIT.R,
+                    config = {
+                      padding = 0,
+                      align = "cm"
+                    },
+                    nodes = {
+                      {
+                        n = G.UIT.T,
+                        config = {
+                          text = localize("tm_tip_me_message_1"),
+                          shadow = true,
+                          scale = scale * 0.8,
+                          colour = G.C.UI.TEXT_LIGHT
+                        }
+                      }
+                    }
+                  },
+                  {
+                    n = G.UIT.R,
+                    config = {
+                      padding = 0,
+                      align = "cm"
+                    },
+                    nodes = {
+                      {
+                        n = G.UIT.T,
+                        config = {
+                          text = localize("tm_tip_me_message_2"),
+                          shadow = true,
+                          scale = scale * 0.8,
+                          colour = G.C.UI.TEXT_LIGHT
+                        }
+                      }
+                    }
+                  },
+                  {
+                    n = G.UIT.R,
+                    config = {
+                      padding = 0,
+                      align = "cm"
+                    },
+                    nodes = {
+                      {
+                        n = G.UIT.T,
+                        config = {
+                          text = localize("tm_tip_me_message_3"),
+                          shadow = true,
+                          scale = scale * 0.8,
+                          colour = G.C.UI.TEXT_LIGHT
+                        }
+                      }
+                    }
+                  },
+                  UIBox_button({
+                    minw = 3.85,
+                    colour = {0.5, 0.4, 0.45, 1},
+                    button = "tm_tip_me",
+                    label = {localize("tm_tip_me")}
+                  })
+                },
+              },
+            },
+        }
+      end
+    }
+end
+
+function G.FUNCS.tm_github(e)
+	love.system.openURL("https://github.com/SirMaiquis/Balatro-TagManager")
+end
+function G.FUNCS.tm_tip_me(e)
+  love.system.openURL("https://ko-fi.com/sirmaiquis")
 end
 
 return TagManagerUI

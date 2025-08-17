@@ -13,7 +13,7 @@ function TagManagerUtils.custom_text_container(_loc, args)
     if not _loc then return nil end
     args = args or {}
     local text = {}
-    localize{type = 'quips', key = _loc or 'lq_1', vars = loc_vars or {}, nodes = text}
+    localize{type = 'quips', key = _loc or 'lq_1', vars = args or {}, nodes = text}
     local row = {}
     for k, v in ipairs(text) do
         row[#row+1] = {n=G.UIT.R, config={align = "cl", shadow = true}, nodes=v}
