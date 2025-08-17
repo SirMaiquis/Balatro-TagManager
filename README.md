@@ -2,6 +2,8 @@
 
 Tag Manager is a mod to control tags in the game, you can manage the Ante when they can start appearing!
 
+![Thumbnail](https://iili.io/FE6yXdx.jpg)
+
 ## Features
 
 - **Ante-based Tag Control**: Set minimum and maximum ante requirements for each tag
@@ -27,5 +29,3 @@ Thank you for using or contributing to the Tag manager mod!
 Special thanks to the mod contributors:
 
 - [@SirMaiquis](https://github.com/SirMaiquis) - Main developer and maintainer of the mod.
-
-![Thumbnail](https://iili.io/FE6yXdx.jpg)
