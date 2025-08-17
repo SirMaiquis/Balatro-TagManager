@@ -1,9 +1,9 @@
 return {
     misc = {
-        dictionary = {
+        quips = {
             ml_tags_options_message = {
-                "Seleziona il minimo di Ante per ogni tag",
-                "Gestito da Tag Manager Mod By @SirMaiquis",
+                "Seleziona l'ante minimo e massimo per ogni tag, o disattivalo direttamente",
+                "              Gestito da Tag Manager Mod By {C:green,E:1}@SirMaiquis{}",
             }
         }
     }

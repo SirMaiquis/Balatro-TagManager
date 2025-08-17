@@ -1,9 +1,9 @@
 return {
     misc = {
-        dictionary = {
+        quips = {
             ml_tags_options_message = {
-                "各タグの最小アンティーを選択してください",
-                "Tag Manager Mod By @SirMaiquisによって管理されています",
+                "各タグの最小および最大アンティーを選択するか、直接無効にしてください",
+                "              Tag Manager Mod By {C:green,E:1}@SirMaiquis{}によって管理されています",
             }
         }
     }

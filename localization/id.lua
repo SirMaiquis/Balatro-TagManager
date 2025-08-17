@@ -1,9 +1,9 @@
 return {
     misc = {
-        dictionary = {
+        quips = {
             ml_tags_options_message = {
-                "Pilih minimum ante untuk setiap tag",
-                "Dikelola oleh Tag Manager Mod By @SirMaiquis",
+                "Pilih ante minimum dan maksimum untuk setiap tag, atau nonaktifkan langsung",
+                "              Dikelola oleh Tag Manager Mod By {C:green,E:1}@SirMaiquis{}",
             }
         }
     }
