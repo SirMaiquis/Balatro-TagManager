@@ -4,7 +4,10 @@ Tag Manager is a mod to control tags in the game, you can manage the Ante when t
 
 ## Features
 
-- **Control when tags appear**: Configure at which Ante level specific tags start appearing in your runs, giving you more control over game progression and strategy.
+- **Ante-based Tag Control**: Set minimum and maximum ante requirements for each tag
+- **Individual Tag Toggles**: Enable/disable specific tags
+- **Paginated UI**: Clean interface with pagination for managing many tags
+- **Global Toggle**: Master switch to enable/disable the entire mod
 
 ## Installation
 

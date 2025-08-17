@@ -48,8 +48,8 @@ Write-Host "  1. TagManager-$cleanVersionName.zip (mod only)" -ForegroundColor C
 Write-Host "  2. TagManager-$cleanVersionName-TS.zip (full package)" -ForegroundColor Cyan
 
 # Check if required files exist
-$requiredFiles = @("mod.lua", "tagManager.json", "config.lua", "localization")
-$requiredFilesTS = @("CHANGELOG.md", "icon.png", "LICENSE", "manifest.json", "README.md", "mod.lua", "tagManager.json", "config.lua", "localization")
+$requiredFiles = @("mod.lua", "tagManager.json", "config.lua", "localization", "src")
+$requiredFilesTS = @("CHANGELOG.md", "icon.png", "LICENSE", "manifest.json", "README.md", "mod.lua", "tagManager.json", "config.lua", "localization", "src")
 
 foreach ($file in $requiredFiles) {
     if (-not (Test-Path $file)) {
@@ -90,6 +90,7 @@ try {
     
     # Copy localization folder and mod.lua to TagManager folder
     Copy-Item -Path "localization" -Destination $tagManagerFolder -Recurse -Force
+    Copy-Item -Path "src" -Destination $tagManagerFolder -Recurse -Force
     Copy-Item -Path "mod.lua" -Destination $tagManagerFolder -Force
     Copy-Item -Path "tagManager.json" -Destination $tagManagerFolder -Force
     Copy-Item -Path "config.lua" -Destination $tagManagerFolder -Force
@@ -108,6 +109,7 @@ try {
     Write-Host "    - tagManager.json" -ForegroundColor Gray
     Write-Host "    - config.lua" -ForegroundColor Gray
     Write-Host "    - localization/" -ForegroundColor Gray
+    Write-Host "    - src/" -ForegroundColor Gray
     
     Write-Host ""
     Write-Host "Creating full package..." -ForegroundColor Green
@@ -117,16 +119,19 @@ try {
     New-Item -ItemType Directory -Path $tempDir2 -Force | Out-Null
     
     # Copy all files for TS package
-    $tsFiles = @("CHANGELOG.md", "icon.png", "LICENSE", "manifest.json", "README.md", "mod.lua", "tagManager.json", "config.lua", "localization")
+    $tsFiles = @("CHANGELOG.md", "icon.png", "LICENSE", "manifest.json", "README.md", "mod.lua", "tagManager.json", "config.lua")
     foreach ($file in $tsFiles) {
         if (Test-Path $file) {
             Copy-Item -Path $file -Destination $tempDir2 -Force
         }
     }
     
-    # Copy localization folder
+    # Copy folder structures
     if (Test-Path "localization") {
         Copy-Item -Path "localization" -Destination $tempDir2 -Recurse -Force
+    }
+    if (Test-Path "src") {
+        Copy-Item -Path "src" -Destination $tempDir2 -Recurse -Force
     }
     
     # Create second zip file from temp directory contents
@@ -144,6 +149,7 @@ try {
     Write-Host "  - README.md" -ForegroundColor Gray
     Write-Host "  - mod.lua" -ForegroundColor Gray
     Write-Host "  - localization/" -ForegroundColor Gray
+    Write-Host "  - src/" -ForegroundColor Gray
     Write-Host "  - tagManager.json" -ForegroundColor Gray
     Write-Host "  - config.lua" -ForegroundColor Gray
 }

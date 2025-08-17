@@ -1,4 +1,5 @@
 return {
+	["global_enabled"] = true,
 	["tag_uncommon"] = {
 		["min_ante"] = 1,
 		["max_ante"] = 2,
